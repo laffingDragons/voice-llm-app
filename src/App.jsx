@@ -295,6 +295,10 @@ function App() {
       } catch (err) {
         toast.error("🤯 Key decryption flopped! Time for a fresh one, chief! 🔑");
       }
+    } else {
+      toast.error("🚀 No API key found! Add one in the sidebar to start chatting! ✨", {
+        duration: 5000,
+      });
     }
 
     // Load chat history
@@ -563,7 +567,7 @@ function App() {
   const showChat = chatHistory.length > 0 || isLoading;
 
   return (
-    <div className={`min-h-screen flex flex-col md:flex-row bg-gradient-to-br ${selectedTheme.bg} animate-gradient overflow-hidden`}>
+   <div className={`min-h-screen flex flex-col md:flex-row bg-gradient-to-br ${selectedTheme.bg} animate-gradient overflow-hidden`}>
       {/* Custom CSS for animations */}
       <style jsx>{`
         @keyframes gradient {
@@ -582,6 +586,22 @@ function App() {
         }
         .animate-glow {
           animation: glow 1.5s ease-in-out infinite;
+        }
+        @keyframes attention-glow {
+          0% { box-shadow: 0 0 10px rgba(255, 255, 0, 0.5), 0 0 20px rgba(0, 255, 255, 0.4); }
+          50% { box-shadow: 0 0 20px rgba(255, 255, 0, 0.8), 0 0 40px rgba(0, 255, 255, 0.7); }
+          100% { box-shadow: 0 0 10px rgba(255, 255, 0, 0.5), 0 0 20px rgba(0, 255, 255, 0.4); }
+        }
+        .animate-attention-glow {
+          animation: attention-glow 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse-border {
+          0% { border-color: rgba(255, 255, 0, 0.5); box-shadow: 0 0 10px rgba(255, 255, 0, 0.5); }
+          50% { border-color: rgba(255, 255, 0, 1); box-shadow: 0 0 20px rgba(255, 255, 0, 0.8); }
+          100% { border-color: rgba(255, 255, 0, 0.5); box-shadow: 0 0 10px rgba(255, 255, 0, 0.5); }
+        }
+        .animate-pulse-border {
+          animation: pulse-border 1.5s ease-in-out infinite;
         }
         @keyframes bounce-dot {
           0%, 100% { transform: translateY(0); }
@@ -626,8 +646,8 @@ function App() {
         position="top-right" 
         toastOptions={{ 
           style: { 
-            background: "#1f2937", // Dark background
-            color: "#fff",         // White text
+            background: "#1f2937",
+            color: "#fff",
             borderRadius: "15px",
             padding: "12px 20px",
             fontSize: "14px",
@@ -636,14 +656,14 @@ function App() {
           },
           success: {
             iconTheme: {
-              primary: '#10B981', // Green for success
-              secondary: '#fff',  // White icon background
+              primary: '#10B981',
+              secondary: '#fff',
             }
           },
           error: {
             iconTheme: {
-              primary: '#EF4444', // Red for error
-              secondary: '#fff',  // White icon background
+              primary: '#EF4444',
+              secondary: '#fff',
             }
           }
         }} 
@@ -659,30 +679,44 @@ function App() {
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
           className={`absolute top-4 ${isSidebarOpen ? 'left-4' : 'left-4'} p-3 bg-gradient-to-r ${selectedTheme.micIdle} rounded-full hover:scale-105 transition-all duration-300 shadow-lg ${
             !isSidebarOpen ? 'fixed z-30' : ''
-          }`}
+          } ${isApiKeyValid !== true ? 'animate-attention-glow' : ''}`}
         >
           <Menu className="w-6 h-6 text-white" />
         </button>
         
         {isSidebarOpen && (
           <div className="p-6 mt-16">
-            <h2 className={`text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-${selectedTheme.accent} mb-6`}>
+            <h2
+              className={`text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-${selectedTheme.accent} mb-6 ${
+                isApiKeyValid !== true ? 'animate-attention-glow' : ''
+              }`}
+            >
               🚀 GPT-3.5 Turbo Key 🚀
             </h2>
             <input
               type="password"
-              placeholder="Drop your magic key here! ✨"
+              placeholder={isApiKeyValid !== true ? "🔑 Add your API key to unlock AI magic! ✨" : "Drop your magic key here! ✨"}
               value={apiKey}
               onChange={handleApiKeyChange}
-              className={`w-full p-3 rounded-xl bg-gradient-to-r ${selectedTheme.input} backdrop-blur-sm text-cyan-200 placeholder-cyan-300/60 focus:outline-none focus:ring-2 focus:ring-${selectedTheme.accent}/70 border border-${selectedTheme.accent}/20 transition-all duration-300`}
+              className={`w-full p-3 rounded-xl bg-gradient-to-r ${selectedTheme.input} backdrop-blur-sm text-cyan-200 placeholder-cyan-300/60 focus:outline-none focus:ring-2 focus:ring-${selectedTheme.accent}/70 border border-${selectedTheme.accent}/20 transition-all duration-300 ${
+                isApiKeyValid !== true ? 'animate-pulse-border' : ''
+              }`}
             />
             {isApiKeyValid === false && <p className={`text-${selectedTheme.accent} mt-2 text-sm animate-pulse`}>{error}</p>}
             {isApiKeyValid === true && (
               <p className={`text-green-400 mt-2 text-sm font-semibold animate-bounce`}>🎯 Boom! We're locked and loaded! 🎉</p>
             )}
             {!isApiKeyValid && (
-              <p className="text-yellow-300 mt-3 text-xs">
-                No key? No worries! Just feed me some OpenAI magic and we're good to go! 😎
+              <p className={`text-yellow-300 mt-3 text-xs animate-fade-in`}>
+                No key? No worries! Just feed me some OpenAI magic and we're good to go! 😎{' '}
+                <a
+                  href="https://platform.openai.com/account/api-keys"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`text-${selectedTheme.accent} underline hover:text-${selectedTheme.accent}/80 transition-colors`}
+                >
+                  Get one here!
+                </a>
               </p>
             )}
             
