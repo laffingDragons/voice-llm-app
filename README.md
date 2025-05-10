@@ -10,10 +10,10 @@
   <p align="center">
     Modern voice-enabled AI chat with 90% cost savings over traditional solutions
     <br />
-    <a href="#demo"><strong>View Demo »</strong></a>
+    <a href="https://laffingdragons.github.io/voice-llm-app/" target="_blank"><strong>View Demo »</strong></a>
     <br />
     <br />
-    <a href="https://your-demo-link.com">Live Demo</a>
+    <a href="https://laffingdragons.github.io/voice-llm-app/" target="_blank">Live Demo</a>
     ·
     <a href="https://github.com/your-username/voice-llm-chat/issues">Report Bug</a>
     ·
