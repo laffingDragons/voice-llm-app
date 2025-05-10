@@ -1,8 +1,253 @@
 import { useState, useEffect, useRef } from "react";
 import { OpenAI } from "openai";
-import { Mic, Send, Menu, Trash2, MicOff } from "lucide-react";
+import { Mic, Send, Menu, Trash2, MicOff, Palette } from "lucide-react";
 import CryptoJS from "crypto-js";
 import toast, { Toaster } from "react-hot-toast";
+
+// Color themes with 10 additional pastel themes
+const themes = [
+  {
+    id: 'neon',
+    name: '🌟 Neon Dreams',
+    bg: 'from-purple-600 via-pink-500 to-blue-600',
+    sidebar: 'from-indigo-600/50 to-purple-600/50',
+    userMsg: 'from-blue-500 to-cyan-500',
+    aiMsg: 'from-pink-500 to-orange-500',
+    micActive: 'from-red-500 to-pink-500',
+    micIdle: 'from-cyan-500 to-blue-500',
+    input: 'from-indigo-600/40 to-purple-600/40',
+    accent: 'pink-400'
+  },
+  {
+    id: 'ocean',
+    name: '🌊 Ocean Breeze',
+    bg: 'from-blue-600 via-teal-500 to-cyan-600',
+    sidebar: 'from-blue-700/50 to-teal-700/50',
+    userMsg: 'from-blue-600 to-teal-500',
+    aiMsg: 'from-teal-500 to-cyan-500',
+    micActive: 'from-red-500 to-orange-500',
+    micIdle: 'from-blue-600 to-cyan-500',
+    input: 'from-blue-800/40 to-teal-800/40',
+    accent: 'cyan-400'
+  },
+  {
+    id: 'sunset',
+    name: '🌅 Sunset Glow',
+    bg: 'from-orange-500 via-red-500 to-pink-600',
+    sidebar: 'from-orange-600/50 to-red-600/50',
+    userMsg: 'from-orange-600 to-red-500',
+    aiMsg: 'from-red-500 to-pink-500',
+    micActive: 'from-red-600 to-pink-600',
+    micIdle: 'from-orange-500 to-yellow-500',
+    input: 'from-orange-800/40 to-red-800/40',
+    accent: 'yellow-400'
+  },
+  {
+    id: 'forest',
+    name: '🌲 Forest Mystery',
+    bg: 'from-green-700 via-emerald-600 to-teal-700',
+    sidebar: 'from-green-800/50 to-emerald-800/50',
+    userMsg: 'from-green-600 to-emerald-500',
+    aiMsg: 'from-emerald-500 to-teal-500',
+    micActive: 'from-red-500 to-orange-500',
+    micIdle: 'from-green-600 to-teal-500',
+    input: 'from-green-900/40 to-emerald-900/40',
+    accent: 'emerald-400'
+  },
+  {
+    id: 'cosmic',
+    name: '🌌 Cosmic Night',
+    bg: 'from-indigo-900 via-purple-900 to-black',
+    sidebar: 'from-indigo-900/50 to-purple-900/50',
+    userMsg: 'from-indigo-600 to-purple-600',
+    aiMsg: 'from-purple-600 to-pink-600',
+    micActive: 'from-red-600 to-pink-600',
+    micIdle: 'from-indigo-500 to-purple-500',
+    input: 'from-indigo-900/60 to-purple-900/60',
+    accent: 'purple-400'
+  },
+  {
+    id: 'desert',
+    name: '🏜️ Desert Sand',
+    bg: 'from-amber-700 via-orange-600 to-red-700',
+    sidebar: 'from-amber-800/50 to-orange-800/50',
+    userMsg: 'from-amber-600 to-orange-600',
+    aiMsg: 'from-orange-600 to-red-600',
+    micActive: 'from-red-600 to-pink-600',
+    micIdle: 'from-amber-600 to-orange-600',
+    input: 'from-amber-900/40 to-orange-900/40',
+    accent: 'amber-400'
+  },
+  {
+    id: 'arctic',
+    name: '❄️ Arctic Frost',
+    bg: 'from-blue-200 via-cyan-300 to-slate-400',
+    sidebar: 'from-blue-400/50 to-cyan-500/50',
+    userMsg: 'from-blue-500 to-cyan-600',
+    aiMsg: 'from-cyan-600 to-slate-600',
+    micActive: 'from-red-500 to-pink-500',
+    micIdle: 'from-blue-500 to-cyan-600',
+    input: 'from-blue-600/40 to-cyan-700/40',
+    accent: 'cyan-300'
+  },
+  {
+    id: 'rainbow',
+    name: '🌈 Rainbow Blast',
+    bg: 'from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500',
+    sidebar: 'from-red-600/50 to-purple-600/50',
+    userMsg: 'from-blue-600 to-green-600',
+    aiMsg: 'from-yellow-600 to-red-600',
+    micActive: 'from-red-600 to-pink-600',
+    micIdle: 'from-blue-600 to-green-600',
+    input: 'from-blue-800/40 to-purple-800/40',
+    accent: 'yellow-400'
+  },
+  {
+    id: 'cherry',
+    name: '🍒 Cherry Blossom',
+    bg: 'from-pink-400 via-rose-400 to-red-400',
+    sidebar: 'from-pink-600/50 to-rose-600/50',
+    userMsg: 'from-pink-600 to-rose-600',
+    aiMsg: 'from-rose-600 to-red-600',
+    micActive: 'from-red-600 to-pink-600',
+    micIdle: 'from-pink-600 to-rose-600',
+    input: 'from-pink-800/40 to-rose-800/40',
+    accent: 'rose-400'
+  },
+  {
+    id: 'cyberpunk',
+    name: '🤖 Cyberpunk',
+    bg: 'from-black via-yellow-600 to-purple-900',
+    sidebar: 'from-gray-900/80 to-purple-900/80',
+    userMsg: 'from-yellow-600 to-green-600',
+    aiMsg: 'from-purple-600 to-pink-600',
+    micActive: 'from-red-600 to-yellow-600',
+    micIdle: 'from-yellow-600 to-green-600',
+    input: 'from-gray-900/60 to-purple-900/60',
+    accent: 'yellow-400'
+  },
+  // 10 Pastel Themes
+  {
+    id: 'pastel-dream',
+    name: '☁️ Pastel Dream',
+    bg: 'from-pink-200 via-purple-200 to-blue-200',
+    sidebar: 'from-pink-300/60 to-blue-300/60',
+    userMsg: 'from-blue-300 to-purple-300',
+    aiMsg: 'from-pink-300 to-rose-300',
+    micActive: 'from-red-400 to-pink-400',
+    micIdle: 'from-blue-400 to-cyan-400',
+    input: 'from-blue-400/30 to-purple-400/30',
+    accent: 'pink-300'
+  },
+  {
+    id: 'lavender',
+    name: '💜 Lavender Fields',
+    bg: 'from-purple-200 via-lavender-300 to-indigo-200',
+    sidebar: 'from-purple-300/60 to-indigo-300/60',
+    userMsg: 'from-indigo-300 to-purple-300',
+    aiMsg: 'from-lavender-400 to-violet-300',
+    micActive: 'from-red-400 to-pink-400',
+    micIdle: 'from-violet-400 to-purple-400',
+    input: 'from-purple-400/30 to-indigo-400/30',
+    accent: 'purple-300'
+  },
+  {
+    id: 'mint',
+    name: '🌿 Mint Fresh',
+    bg: 'from-green-200 via-mint-300 to-teal-200',
+    sidebar: 'from-green-300/60 to-teal-300/60',
+    userMsg: 'from-teal-300 to-green-300',
+    aiMsg: 'from-mint-400 to-emerald-300',
+    micActive: 'from-red-400 to-orange-400',
+    micIdle: 'from-emerald-400 to-teal-400',
+    input: 'from-green-400/30 to-teal-400/30',
+    accent: 'green-300'
+  },
+  {
+    id: 'peach',
+    name: '🍑 Peach Blush',
+    bg: 'from-orange-200 via-peach-300 to-pink-200',
+    sidebar: 'from-orange-300/60 to-pink-300/60',
+    userMsg: 'from-pink-300 to-rose-300',
+    aiMsg: 'from-peach-400 to-coral-300',
+    micActive: 'from-red-400 to-rose-400',
+    micIdle: 'from-coral-400 to-orange-400',
+    input: 'from-orange-400/30 to-pink-400/30',
+    accent: 'orange-300'
+  },
+  {
+    id: 'sky',
+    name: '☁️ Sky Blue',
+    bg: 'from-blue-200 via-sky-300 to-cyan-200',
+    sidebar: 'from-blue-300/60 to-cyan-300/60',
+    userMsg: 'from-cyan-300 to-sky-300',
+    aiMsg: 'from-sky-400 to-blue-300',
+    micActive: 'from-red-400 to-pink-400',
+    micIdle: 'from-sky-400 to-cyan-400',
+    input: 'from-blue-400/30 to-cyan-400/30',
+    accent: 'blue-300'
+  },
+  {
+    id: 'butter',
+    name: '🧈 Butter Cream',
+    bg: 'from-yellow-200 via-amber-200 to-orange-200',
+    sidebar: 'from-yellow-300/60 to-orange-300/60',
+    userMsg: 'from-orange-300 to-amber-300',
+    aiMsg: 'from-yellow-400 to-gold-300',
+    micActive: 'from-red-400 to-orange-400',
+    micIdle: 'from-amber-400 to-yellow-400',
+    input: 'from-yellow-400/30 to-orange-400/30',
+    accent: 'yellow-300'
+  },
+  {
+    id: 'blush',
+    name: '🌸 Rose Blush',
+    bg: 'from-rose-200 via-pink-200 to-red-200',
+    sidebar: 'from-rose-300/60 to-red-300/60',
+    userMsg: 'from-red-300 to-rose-300',
+    aiMsg: 'from-pink-400 to-blush-300',
+    micActive: 'from-red-400 to-pink-400',
+    micIdle: 'from-rose-400 to-pink-400',
+    input: 'from-rose-400/30 to-pink-400/30',
+    accent: 'rose-300'
+  },
+  {
+    id: 'cloud',
+    name: '☁️ Cloudy Day',
+    bg: 'from-gray-200 via-slate-200 to-blue-gray-200',
+    sidebar: 'from-gray-300/60 to-slate-300/60',
+    userMsg: 'from-slate-300 to-blue-gray-300',
+    aiMsg: 'from-gray-400 to-zinc-300',
+    micActive: 'from-red-400 to-pink-400',
+    micIdle: 'from-blue-gray-400 to-slate-400',
+    input: 'from-gray-400/30 to-slate-400/30',
+    accent: 'gray-300'
+  },
+  {
+    id: 'vanilla',
+    name: '🍨 Vanilla Ice',
+    bg: 'from-amber-100 via-yellow-100 to-orange-100',
+    sidebar: 'from-amber-200/60 to-orange-200/60',
+    userMsg: 'from-orange-200 to-amber-200',
+    aiMsg: 'from-yellow-300 to-cream-200',
+    micActive: 'from-red-400 to-orange-400',
+    micIdle: 'from-amber-300 to-yellow-300',
+    input: 'from-amber-300/30 to-orange-300/30',
+    accent: 'amber-200'
+  },
+  {
+    id: 'lilac',
+    name: '🌺 Lilac Garden',
+    bg: 'from-purple-100 via-violet-200 to-pink-100',
+    sidebar: 'from-purple-200/60 to-pink-200/60',
+    userMsg: 'from-pink-200 to-lavender-200',
+    aiMsg: 'from-violet-300 to-lilac-200',
+    micActive: 'from-red-400 to-pink-400',
+    micIdle: 'from-violet-300 to-purple-300',
+    input: 'from-purple-300/30 to-pink-300/30',
+    accent: 'purple-200'
+  }
+];
 
 function App() {
   const [isListening, setIsListening] = useState(false);
@@ -16,14 +261,25 @@ function App() {
   const [isPreRestart, setIsPreRestart] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [selectedTheme, setSelectedTheme] = useState(themes[0]);
+  const [showThemes, setShowThemes] = useState(false);
+  
   const chatContainerRef = useRef(null);
   const textInputRef = useRef(null);
+  const recognitionRef = useRef(null);
 
-  // Encryption key (hardcoded for simplicity; not secure for production)
+  // Encryption key
   const ENCRYPTION_KEY = "voice-llm-app-secret";
 
-  // Load API key and chat history from localStorage
+  // Load saved data
   useEffect(() => {
+    // Load theme
+    const savedTheme = localStorage.getItem("selectedTheme");
+    if (savedTheme) {
+      const theme = themes.find(t => t.id === savedTheme);
+      if (theme) setSelectedTheme(theme);
+    }
+
     // Load encrypted API key
     const encryptedKey = localStorage.getItem("encryptedApiKey");
     if (encryptedKey) {
@@ -48,7 +304,7 @@ function App() {
     }
   }, []);
 
-  // Save chat history to localStorage (limit to latest 10 chats)
+  // Save chat history
   useEffect(() => {
     if (chatHistory.length > 0) {
       const limitedHistory = chatHistory.slice(-10); // Keep latest 10 chats
@@ -57,18 +313,52 @@ function App() {
   }, [chatHistory]);
 
   // Initialize Web Speech API
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.lang = "en-US";
+      recognitionRef.current.interimResults = false;
+      recognitionRef.current.maxAlternatives = 1;
+      recognitionRef.current.continuous = false;
 
-  if (recognition) {
-    recognition.lang = "en-US";
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-  }
+      recognitionRef.current.onstart = () => {
+        setIsListening(true);
+        setIsPreRestart(false);
+      };
 
-  // Start/stop listening
+      recognitionRef.current.onresult = (event) => {
+        const text = event.results[0][0].transcript;
+        setTranscript(text);
+        if (isApiKeyValid) {
+          fetchLLMResponse(text);
+        }
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        setError("Mic malfunction detected! 🚨 Emergency keyboard mode activated! 🚀");
+        toast.error("🎪 Mic pulled a vanishing act! Time to flex those typing fingers! 🤹‍♂️");
+        setIsListening(false);
+        setShowTextInput(true);
+      };
+    }
+
+    // Cleanup
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, [isApiKeyValid]);
+
+  // Mic control with better state management
   const toggleListening = () => {
-    if (!recognition) {
+    if (!recognitionRef.current) {
       setShowTextInput(true);
       setError("Oopsie daisy! Your mic's having a spa day! 🧖‍♀️ Give typing a whirl or try Chrome - it's the mic whisperer! 😜");
       toast.error("🎙️ Mic's MIA! No worries - keyboard warriors unite! ⌨️💪");
@@ -76,37 +366,21 @@ function App() {
     }
 
     if (isListening) {
-      recognition.stop();
-      setIsListening(false);
-      setIsPreRestart(false);
+      recognitionRef.current.stop();
     } else {
       setError("");
-      recognition.start();
-      setIsListening(true);
-      setIsPreRestart(false);
+      try {
+        recognitionRef.current.start();
+      } catch (err) {
+        console.error('Failed to start recognition:', err);
+        if (err.name === 'NotAllowedError') {
+          toast.error("🚫 Mic permission denied! Please enable and try again!");
+        } else {
+          toast.error("🤖 Speech recognition hiccup! Try again!");
+        }
+      }
     }
   };
-
-  // Handle speech recognition results
-  useEffect(() => {
-    if (recognition) {
-      recognition.onresult = (event) => {
-        const text = event.results[0][0].transcript;
-        setTranscript(text);
-        setIsListening(false);
-        if (isApiKeyValid) {
-          fetchLLMResponse(text);
-        }
-      };
-
-      recognition.onerror = () => {
-        setError("Mic malfunction detected! 🚨 Emergency keyboard mode activated! 🚀");
-        toast.error("🎪 Mic pulled a vanishing act! Time to flex those typing fingers! 🤹‍♂️");
-        setIsListening(false);
-        setShowTextInput(true);
-      };
-    }
-  }, [recognition, isApiKeyValid]);
 
   // Validate API key
   const validateApiKey = async (key) => {
@@ -147,7 +421,7 @@ function App() {
     return Math.ceil(text.split(/\s+/).length / 0.75);
   };
 
-  // Fetch LLM response
+  // Fetch LLM response with fixed context
   const fetchLLMResponse = async (input) => {
     if (!isApiKeyValid) {
       setError("🤖 AI's throwing a tantrum! Feed it an API key and watch the magic happen! ✨");
@@ -160,30 +434,30 @@ function App() {
       setError("");
       const openai = new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
       
-      // Prepare messages with latest 5 chats as context
-      const limitedHistory = chatHistory.slice(-5);
-      const messages = limitedHistory
-        .flatMap((chat) => [
-          { role: "user", content: chat.input },
-          { role: "assistant", content: chat.response },
-        ])
-        .concat([{ role: "user", content: input }]);
+      // Build messages in the correct order: oldest to newest
+      const messages = [];
       
-      // Estimate total tokens
+      // Add chat history in chronological order
+      chatHistory.forEach((chat) => {
+        messages.push({ role: "user", content: chat.input });
+        messages.push({ role: "assistant", content: chat.response });
+      });
+      
+      // Add the new user input
+      messages.push({ role: "user", content: input });
+      
+      // If token limit exceeded, keep most recent conversations
       const totalTokens = messages.reduce((sum, msg) => sum + estimateTokens(msg.content), 0);
-      if (totalTokens > 1000) {
-        // Trim to last 3 chats if token limit exceeded
-        const trimmedHistory = limitedHistory.slice(-3);
-        messages.splice(0, messages.length, ...trimmedHistory.flatMap((chat) => [
-          { role: "user", content: chat.input },
-          { role: "assistant", content: chat.response },
-        ]).concat([{ role: "user", content: input }]));
+      if (totalTokens > 3000) {
+        // Keep last 10 exchanges (20 messages) plus the new input
+        const recentMessages = messages.slice(-21);
+        messages.splice(0, messages.length, ...recentMessages);
       }
       
       const completion = await openai.chat.completions.create({
         model: "gpt-3.5-turbo",
         messages,
-        max_tokens: 150,
+        max_tokens: 500,
       });
       
       const responseText = completion.choices[0].message.content;
@@ -199,10 +473,14 @@ function App() {
       // Start pre-restart phase
       setIsPreRestart(true);
       setTimeout(() => {
-        if (recognition && !isListening) {
-          recognition.start();
-          setIsListening(true);
+        if (recognitionRef.current && !isListening) {
           setIsPreRestart(false);
+          try {
+            recognitionRef.current.start();
+          } catch (err) {
+            console.error('Auto-restart failed:', err);
+            setIsPreRestart(false);
+          }
         }
       }, 2000);
     } catch (err) {
@@ -237,12 +515,34 @@ function App() {
     toast.success("🧹 Poof! Clean slate activated! Let's start fresh, buddy! 🎉✨");
   };
 
-  // Auto-scroll to latest message
-  useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-    }
-  }, [chatHistory, isLoading]);
+ useEffect(() => {
+  const scrollToBottom = () => {
+        window.scrollTo({
+            top: document.documentElement.scrollHeight,
+            behavior: 'smooth'
+        });
+    };
+
+  // Scroll immediately when loading starts
+  if (isLoading) {
+         setTimeout(scrollToBottom, 800);
+  }
+
+  // MutationObserver to detect DOM changes
+  const observer = new MutationObserver(() => {
+    scrollToBottom();
+  });
+
+  if (chatContainerRef.current) {
+    observer.observe(chatContainerRef.current, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+  // Cleanup on component unmount
+  return () => observer.disconnect();
+}, [isLoading]);
 
   // Focus text input when shown
   useEffect(() => {
@@ -251,20 +551,21 @@ function App() {
     }
   }, [showTextInput]);
 
+  // Change theme
+  const handleThemeChange = (theme) => {
+    setSelectedTheme(theme);
+    localStorage.setItem("selectedTheme", theme.id);
+    setShowThemes(false);
+    toast.success(`🎨 ${theme.name} theme activated! Looking good! ✨`);
+  };
+
   // Determine if chat should be shown
   const showChat = chatHistory.length > 0 || isLoading;
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-gradient-to-br from-purple-600 via-pink-500 to-blue-600 animate-gradient overflow-hidden">
-      {/* Custom CSS for additional animations */}
+    <div className={`min-h-screen flex flex-col md:flex-row bg-gradient-to-br ${selectedTheme.bg} animate-gradient overflow-hidden`}>
+      {/* Custom CSS for animations */}
       <style jsx>{`
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-        .animate-shimmer {
-          animation: shimmer 1.5s ease-in-out infinite;
-        }
         @keyframes gradient {
           0% { background-position: 0% 50%; }
           50% { background-position: 100% 50%; }
@@ -289,12 +590,19 @@ function App() {
         .animate-bounce-dot1 { animation: bounce-dot 0.6s infinite; }
         .animate-bounce-dot2 { animation: bounce-dot 0.6s infinite 0.2s; }
         .animate-bounce-dot3 { animation: bounce-dot 0.6s infinite 0.4s; }
-        @keyframes slide-up {
-          from { transform: translateY(30px); opacity: 0; }
-          to { transform: translateY(0); opacity: 1; }
+        @keyframes slide-left {
+          from { transform: translateX(-100%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
         }
-        .animate-slide-up {
-          animation: slide-up 0.5s ease-out forwards;
+        @keyframes slide-right {
+          from { transform: translateX(100%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+        .animate-slide-left {
+          animation: slide-left 0.5s ease-out forwards;
+        }
+        .animate-slide-right {
+          animation: slide-right 0.5s ease-out forwards;
         }
         @keyframes pulse-pre-restart {
           0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(251, 146, 60, 0.7); }
@@ -318,8 +626,8 @@ function App() {
         position="top-right" 
         toastOptions={{ 
           style: { 
-            background: "linear-gradient(45deg, #FF6B6B, #4ECDC4)", 
-            color: "#fff",
+            background: "#1f2937", // Dark background
+            color: "#fff",         // White text
             borderRadius: "15px",
             padding: "12px 20px",
             fontSize: "14px",
@@ -328,28 +636,28 @@ function App() {
           },
           success: {
             iconTheme: {
-              primary: '#fff',
-              secondary: '#4ECDC4',
+              primary: '#10B981', // Green for success
+              secondary: '#fff',  // White icon background
             }
           },
           error: {
             iconTheme: {
-              primary: '#fff',
-              secondary: '#FF6B6B',
+              primary: '#EF4444', // Red for error
+              secondary: '#fff',  // White icon background
             }
           }
         }} 
       />
 
-      {/* Sidebar - Completely Hidden When Closed */}
+      {/* Sidebar */}
       <div
-        className={`sidebar fixed inset-y-0 left-0 z-20 bg-gradient-to-b from-indigo-600/50 to-purple-600/50 backdrop-blur-xl border-r border-cyan-400/40 transition-all duration-500 ease-out transform ${
+        className={`sidebar fixed inset-y-0 left-0 z-20 bg-gradient-to-b ${selectedTheme.sidebar} backdrop-blur-xl border-r border-${selectedTheme.accent}/40 transition-all duration-500 ease-out transform ${
           isSidebarOpen ? "w-full md:w-80 translate-x-0" : "w-0 -translate-x-full"
-        } ${isApiKeyValid ? "animate-pulse-border" : ""}`}
+        }`}
       >
         <button
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className={`absolute top-4 ${isSidebarOpen ? 'left-4' : 'left-4'} p-3 bg-gradient-to-r from-pink-500 to-yellow-500 rounded-full hover:from-pink-600 hover:to-yellow-600 transition-all duration-300 shadow-lg hover:shadow-pink-500/25 ${
+          className={`absolute top-4 ${isSidebarOpen ? 'left-4' : 'left-4'} p-3 bg-gradient-to-r ${selectedTheme.micIdle} rounded-full hover:scale-105 transition-all duration-300 shadow-lg ${
             !isSidebarOpen ? 'fixed z-30' : ''
           }`}
         >
@@ -358,7 +666,7 @@ function App() {
         
         {isSidebarOpen && (
           <div className="p-6 mt-16">
-            <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-pink-300 mb-6">
+            <h2 className={`text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-${selectedTheme.accent} mb-6`}>
               🚀 GPT-3.5 Turbo Key 🚀
             </h2>
             <input
@@ -366,11 +674,11 @@ function App() {
               placeholder="Drop your magic key here! ✨"
               value={apiKey}
               onChange={handleApiKeyChange}
-              className="w-full p-3 rounded-xl bg-gradient-to-r from-indigo-900/50 to-purple-900/50 backdrop-blur-sm text-cyan-200 placeholder-cyan-300/60 focus:outline-none focus:ring-2 focus:ring-pink-400/70 border border-cyan-400/20 transition-all duration-300"
+              className={`w-full p-3 rounded-xl bg-gradient-to-r ${selectedTheme.input} backdrop-blur-sm text-cyan-200 placeholder-cyan-300/60 focus:outline-none focus:ring-2 focus:ring-${selectedTheme.accent}/70 border border-${selectedTheme.accent}/20 transition-all duration-300`}
             />
-            {isApiKeyValid === false && <p className="text-pink-400 mt-2 text-sm animate-pulse">{error}</p>}
+            {isApiKeyValid === false && <p className={`text-${selectedTheme.accent} mt-2 text-sm animate-pulse`}>{error}</p>}
             {isApiKeyValid === true && (
-              <p className="text-green-400 mt-2 text-sm font-semibold animate-bounce">🎯 Boom! We're locked and loaded! 🎉</p>
+              <p className={`text-green-400 mt-2 text-sm font-semibold animate-bounce`}>🎯 Boom! We're locked and loaded! 🎉</p>
             )}
             {!isApiKeyValid && (
               <p className="text-yellow-300 mt-3 text-xs">
@@ -378,11 +686,38 @@ function App() {
               </p>
             )}
             
+            {/* Theme Selection */}
+            <div className="mt-8">
+              <button
+                onClick={() => setShowThemes(!showThemes)}
+                className={`w-full p-3 bg-gradient-to-r ${selectedTheme.micIdle} text-white rounded-xl transition-all duration-300 flex items-center justify-center gap-2 font-medium shadow-lg`}
+              >
+                <Palette className="w-5 h-5" />
+                🎨 Change Theme
+              </button>
+              
+              {showThemes && (
+                <div className="mt-4 max-h-64 overflow-y-auto">
+                  {themes.map((theme) => (
+                    <button
+                      key={theme.id}
+                      onClick={() => handleThemeChange(theme)}
+                      className={`w-full p-3 mt-2 bg-gradient-to-r ${theme.userMsg} text-white rounded-lg transition-all duration-300 text-sm ${
+                        selectedTheme.id === theme.id ? 'ring-2 ring-white/30' : 'hover:opacity-90'
+                      }`}
+                    >
+                      {theme.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            
             {/* Clear Chat Button */}
             {chatHistory.length > 0 && (
               <button
                 onClick={clearChatHistory}
-                className="mt-8 w-full p-3 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-xl hover:from-red-600 hover:to-orange-600 transition-all duration-300 flex items-center justify-center gap-2 font-medium shadow-lg hover:shadow-red-500/25"
+                className={`mt-8 w-full p-3 bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-xl hover:from-red-600 hover:to-orange-600 transition-all duration-300 flex items-center justify-center gap-2 font-medium shadow-lg`}
               >
                 <Trash2 className="w-5 h-5" />
                 🧹 Sweep it clean!
@@ -400,12 +735,12 @@ function App() {
         {!showChat && (
           // Landing Screen
           <div className="flex-1 flex flex-col items-center justify-center p-4">
-            <h1 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-pink-300 to-yellow-300 mb-6 animate-pulse md:text-7xl text-center tracking-wider drop-shadow-lg">
+            <h1 className={`text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-${selectedTheme.accent} to-yellow-300 mb-6 animate-pulse md:text-7xl text-center tracking-wider drop-shadow-lg`}>
               🎤 Talk & Chat! 🤖
             </h1>
             <p className="text-center animate-fade-in max-w-lg text-lg">
               <span className="text-yellow-300">Hey there, chatterbox! 👋</span>{" "}
-              <span className="text-pink-300">Hit that groovy mic button 🔥</span>{" "}
+              <span className={`text-${selectedTheme.accent}`}>Hit that groovy mic button 🔥</span>{" "}
               <span className="text-cyan-300">or type away like a boss! 💪</span>
             </p>
           </div>
@@ -413,7 +748,7 @@ function App() {
 
         {showChat && (
           // Chat Interface (Full Screen)
-          <div className="flex-1 flex flex-col h-screen">
+          <div className="flex-1 flex flex-col h-screen pb-18">
             {/* Chat Display */}
             <div
               ref={chatContainerRef}
@@ -421,24 +756,22 @@ function App() {
             >
               <div className="max-w-4xl mx-auto">
                 {chatHistory.map((chat, index) => (
-                  <div key={index} className="animate-slide-up mb-6 transform">
+                  <div key={index} className="mb-6">
                     <div className="flex justify-end mb-3">
-                      <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 text-white max-w-[80%] backdrop-blur-sm shadow-lg hover:shadow-blue-500/20 transition-all duration-300 relative overflow-hidden">
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-shimmer"></div>
-                        <div className="relative z-10">{chat.input}</div>
+                      <div className={`p-4 rounded-2xl bg-gradient-to-br ${selectedTheme.userMsg} text-white max-w-[80%] backdrop-blur-sm shadow-lg hover:shadow-blue-500/20 transition-all duration-300 animate-slide-right`}>
+                        {chat.input}
                       </div>
                     </div>
                     <div className="flex justify-start">
-                      <div className="p-4 rounded-2xl bg-gradient-to-br from-pink-500 to-orange-500 text-white max-w-[80%] backdrop-blur-sm shadow-lg hover:shadow-pink-500/20 transition-all duration-300 relative overflow-hidden">
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-shimmer"></div>
-                        <div className="relative z-10">{chat.response}</div>
+                      <div className={`p-4 rounded-2xl bg-gradient-to-br ${selectedTheme.aiMsg} text-white max-w-[80%] backdrop-blur-sm shadow-lg hover:shadow-pink-500/20 transition-all duration-300 animate-slide-left`}>
+                        {chat.response}
                       </div>
                     </div>
                   </div>
                 ))}
                 {isLoading && (
                   <div className="flex justify-start">
-                    <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-500 text-white">
+                    <div className={`p-4 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-500 text-white animate-slide-left`}>
                       <div className="flex items-center gap-2">
                         <span className="animate-pulse">🤔</span>
                         <div className="flex space-x-1">
@@ -456,15 +789,15 @@ function App() {
           </div>
         )}
 
-        {/* Microphone Button - Colorful with glow effect */}
+        {/* Microphone Button - Adjusted for mobile */}
         <button
           onClick={toggleListening}
-          className={`fixed bottom-24 right-6 md:bottom-8 md:right-8 p-5 rounded-full transition-all duration-300 z-30 transform hover:scale-110 ${
+          className={`fixed ${showChat ? 'bottom-24 md:bottom-12' : 'bottom-8'} right-6 md:right-8 p-5 rounded-full transition-all duration-300 z-30 transform hover:scale-110 ${
             isListening
-              ? "bg-gradient-to-r from-red-500 to-pink-500 animate-glow shadow-lg shadow-red-500/70 ring-4 ring-red-400/30"
+              ? `bg-gradient-to-r ${selectedTheme.micActive} animate-glow shadow-lg shadow-red-500/70 ring-4 ring-red-400/30`
               : isPreRestart
-              ? "bg-gradient-to-r from-orange-500 to-yellow-500 animate-pulse-pre-restart shadow-lg shadow-orange-500/70 ring-4 ring-orange-400/30"
-              : "bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 shadow-xl shadow-cyan-500/50 ring-4 ring-cyan-400/20"
+              ? `bg-gradient-to-r from-orange-500 to-yellow-500 animate-pulse-pre-restart shadow-lg shadow-orange-500/70 ring-4 ring-orange-400/30`
+              : `bg-gradient-to-r ${selectedTheme.micIdle} hover:from-cyan-600 hover:to-blue-600 shadow-xl shadow-cyan-500/50 ring-4 ring-cyan-400/20`
           }`}
         >
           {isListening ? (
@@ -475,7 +808,9 @@ function App() {
         </button>
 
         {/* Text Input - Always at bottom */}
-        <div className="bg-gradient-to-r from-indigo-900/30 to-purple-900/30 backdrop-blur-xl p-6 border-t border-cyan-400/20">
+        <div className={`fixed bottom-0 left-0 right-0 bg-gradient-to-r from-indigo-900/30 to-purple-900/30 backdrop-blur-xl p-3 border-t border-${selectedTheme.accent}/20 ${
+          isSidebarOpen ? "md:pl-80" : ""
+        }`}>
           <div className="max-w-4xl mx-auto flex gap-3">
             <input
               ref={textInputRef}
@@ -484,7 +819,7 @@ function App() {
               value={textInput}
               onChange={(e) => setTextInput(e.target.value)}
               onKeyPress={handleKeyPress}
-              className="flex-1 p-4 rounded-2xl bg-gradient-to-r from-indigo-600/40 to-purple-600/40 backdrop-blur-sm text-cyan-100 placeholder-cyan-300/70 focus:outline-none focus:ring-2 focus:ring-pink-400/70 border border-cyan-400/30 transition-all duration-300 text-lg"
+              className={`flex-1 p-4 rounded-2xl bg-gradient-to-r ${selectedTheme.input} backdrop-blur-sm text-cyan-100 placeholder-cyan-300/70 focus:outline-none focus:ring-2 focus:ring-${selectedTheme.accent}/70 border border-${selectedTheme.accent}/30 transition-all duration-300 text-lg`}
             />
             <button
               onClick={handleTextSubmit}
