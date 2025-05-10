@@ -25,7 +25,8 @@
 ## 📸 Screenshots
 
 ### Home Screen
-![Uploading Screenshot 2025-05-10 at 10.43.54 PM.png…]()
+
+<img width="1919" alt="Screenshot 2025-05-10 at 10 55 56 PM" src="https://github.com/user-attachments/assets/b7923348-07bb-4419-8cb7-ae9ec1fab283" />
 *Clean landing page with theme selection*
 
 ### Voice Chat Interface
