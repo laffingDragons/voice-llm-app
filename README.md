@@ -25,23 +25,23 @@
 ## 📸 Screenshots
 
 ### Home Screen
-![Home Screen](screenshots/home-screen.png)
+![Uploading Screenshot 2025-05-10 at 10.43.54 PM.png…]()
 *Clean landing page with theme selection*
 
 ### Voice Chat Interface
-![Voice Chat](screenshots/voice-chat.png)
-*Real-time voice conversation with AI*
+<img width="242" alt="Screenshot 2025-05-10 at 10 44 29 PM" src="https://github.com/user-attachments/assets/24aa097d-f637-42bc-81ff-9b4463e1ce50" />
+*Voice conversation with AI*
 
 ### Theme Selection
-![Theme Selection](screenshots/theme-selection.png)
+<img width="347" alt="Screenshot 2025-05-10 at 10 45 14 PM" src="https://github.com/user-attachments/assets/3e1c891d-eee3-488e-bafd-c6423dcd6c7d" />
 *20 stunning themes including 10 pastel options*
 
 ### Mobile View
-![Mobile View](screenshots/mobile-view.png)
+<img width="404" alt="Screenshot 2025-05-10 at 10 45 58 PM" src="https://github.com/user-attachments/assets/d51e0d60-c7fe-44e1-b137-38819389967f" />
 *Fully responsive design for mobile devices*
 
 ### Chat History
-![Chat History](screenshots/chat-history.png)
+<img width="1136" alt="Screenshot 2025-05-10 at 10 46 40 PM" src="https://github.com/user-attachments/assets/bf14a05e-dd1f-43b2-be4e-985ad95b45fc" />
 *Persistent conversation memory*
 
 <!-- PROJECT OVERVIEW -->
