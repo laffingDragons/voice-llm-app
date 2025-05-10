@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "homepage": "https://laffingDragons.github.io/voice-llm-app",
+  "homepage": "https://laffingdragons.github.io/voice-llm-app",
   "scripts": {
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist",
