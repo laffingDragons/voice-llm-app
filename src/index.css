@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
- @import url('https://cdn.jsdelivr.net/npm/tailwindcss@3.3.0/dist/tailwind.min.css');
+@import url('https://cdn.jsdelivr.net/npm/tailwindcss@3.3.0/dist/tailwind.min.css');
 
 /* Animated Gradient Background */
 @keyframes gradient {
