@@ -2,10 +2,11 @@
   "name": "voice-llm-app",
   "private": true,
   "version": "0.0.0",
-  "type": "module","homepage": "https://laffingDragons.github.io/voice-llm-app",
-"scripts": {
-  "predeploy": "npm run build",
-  "deploy": "gh-pages -d dist",
+  "type": "module",
+  "homepage": "https://laffingDragons.github.io/voice-llm-app",
+  "scripts": {
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist",
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
@@ -13,10 +14,12 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.6",
+    "crypto-js": "^4.2.0",
     "lucide-react": "^0.509.0",
     "openai": "^4.98.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-hot-toast": "^2.5.2",
     "tailwindcss": "^4.1.6"
   },
   "devDependencies": {
