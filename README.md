@@ -3,7 +3,7 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <img src="logo.png" alt="Logo" width="80" height="80">
+  <img width="98" alt="Screenshot 2025-05-10 at 10 40 19 PM" src="https://github.com/user-attachments/assets/f5989148-1ba9-4cd2-b42f-b28179a3c7a3" />
   
   <h3 align="center">Voice LLM Chat</h3>
 
