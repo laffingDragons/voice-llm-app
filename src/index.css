@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+ @import url('https://cdn.jsdelivr.net/npm/tailwindcss@3.3.0/dist/tailwind.min.css');
+
 /* Animated Gradient Background */
 @keyframes gradient {
   0% { background-position: 0% 50%; }
@@ -25,9 +27,18 @@
 
 /* Pre-Restart Mic Animation */
 @keyframes pulse-pre-restart {
-  0% { box-shadow: 0 0 5px rgba(255, 165, 0, 0.7); transform: scale(1); }
-  50% { box-shadow: 0 0 15px rgba(255, 165, 0, 0.9); transform: scale(1.05); }
-  100% { box-shadow: 0 0 5px rgba(255, 165, 0, 0.7); transform: scale(1); }
+  0% { 
+    box-shadow: 0 0 5px rgba(255, 165, 0, 0.7); 
+    transform: scale(1); 
+  }
+  50% { 
+    box-shadow: 0 0 15px rgba(255, 165, 0, 0.9); 
+    transform: scale(1.05); 
+  }
+  100% { 
+    box-shadow: 0 0 5px rgba(255, 165, 0, 0.7); 
+    transform: scale(1); 
+  }
 }
 
 .animate-pulse-pre-restart {
@@ -42,14 +53,20 @@
 }
 
 .animate-pulse-border {
-  border: 2px solid;
+  border-color: rgba(255, 255, 0, 0.5);
   animation: pulse-border 2s ease-in-out infinite;
 }
 
 /* Chat Message Slide-Up */
 @keyframes slide-up {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from { 
+    transform: translateY(20px); 
+    opacity: 0; 
+  }
+  to { 
+    transform: translateY(0); 
+    opacity: 1; 
+  }
 }
 
 .animate-slide-up {
@@ -82,4 +99,15 @@
 
 .animate-fade-in {
   animation: fade-in 1s ease-in;
+}
+
+/* Custom Tailwind Classes for the Voice LLM App */
+@layer utilities {
+  .sidebar {
+    transition: width 0.3s ease;
+  }
+  
+  .main-content {
+    transition: margin-left 0.3s ease;
+  }
 }

@@ -47,10 +47,11 @@ function App() {
     }
   }, []);
 
-  // Save chat history to localStorage
+  // Save chat history to localStorage (limit to latest 5 chats)
   useEffect(() => {
     if (chatHistory.length > 0) {
-      localStorage.setItem("chatHistory", JSON.stringify(chatHistory));
+      const limitedHistory = chatHistory.slice(-5); // Keep latest 5 chats
+      localStorage.setItem("chatHistory", JSON.stringify(limitedHistory));
     }
   }, [chatHistory]);
 
@@ -140,6 +141,11 @@ function App() {
     }
   };
 
+  // Estimate tokens (simple word-based approximation)
+  const estimateTokens = (text) => {
+    return Math.ceil(text.split(/\s+/).length / 0.75); // Rough estimate: 1 token ~ 0.75 words
+  };
+
   // Fetch LLM response
   const fetchLLMResponse = async (input) => {
     if (!isApiKeyValid) {
@@ -152,13 +158,24 @@ function App() {
       setIsLoading(true);
       setError("");
       const openai = new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
-      // Prepare messages with full chat history as context
-      const messages = chatHistory
+      // Prepare messages with latest 5 chats as context
+      const limitedHistory = chatHistory.slice(-5); // Limit to 5 chats
+      const messages = limitedHistory
         .flatMap((chat) => [
           { role: "user", content: chat.input },
           { role: "assistant", content: chat.response },
         ])
         .concat([{ role: "user", content: input }]);
+      // Estimate total tokens
+      const totalTokens = messages.reduce((sum, msg) => sum + estimateTokens(msg.content), 0);
+      if (totalTokens > 1000) {
+        // Trim to last 3 chats if token limit exceeded
+        const trimmedHistory = limitedHistory.slice(-3);
+        messages.splice(0, messages.length, ...trimmedHistory.flatMap((chat) => [
+          { role: "user", content: chat.input },
+          { role: "assistant", content: chat.response },
+        ]).concat([{ role: "user", content: input }]));
+      }
       const completion = await openai.chat.completions.create({
         model: "gpt-3.5-turbo",
         messages,
@@ -202,24 +219,24 @@ function App() {
   }, [chatHistory, isLoading]);
 
   return (
-    <div className="min-h-screen flex bg-gradient-to-br from-purple-600 via-pink-500 to-blue-600 animate-gradient">
+    <div className="min-h-screen flex flex-col md:flex-row bg-gradient-to-br from-purple-600 via-pink-500 to-blue-600 animate-gradient">
       {/* Toaster for notifications */}
       <Toaster position="top-right" toastOptions={{ style: { background: "#fff", color: "#333" } }} />
 
-      {/* Collapsible Sidebar */}
+      {/* Fullscreen Sidebar */}
       <div
-        className={`fixed top-0 left-0 h-full w-64 bg-white/10 backdrop-blur-md p-4 transition-all duration-300 md:static ${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full md:w-16 md:translate-x-0"
+        className={`sidebar fixed inset-y-0 left-0 z-10 bg-gray-900/90 border-r border-yellow-400/50 transition-all duration-300 ${
+          isSidebarOpen ? "w-full md:w-80" : "w-16"
         } ${isApiKeyValid ? "animate-pulse-border" : ""}`}
       >
         <button
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="absolute top-4 right-4 md:left-4 md:right-auto p-2 bg-white/80 rounded-lg"
+          className="absolute top-4 left-4 p-2 bg-white/80 rounded-lg"
         >
           <Menu className="w-6 h-6 text-gray-800" />
         </button>
         {isSidebarOpen && (
-          <>
+          <div className="p-4 mt-12">
             <h2 className="text-2xl font-bold text-white mb-4">GPT-3.5 Turbo API Key</h2>
             <input
               type="text"
@@ -237,12 +254,12 @@ function App() {
                 No key? You can still play with the mic, but the AI’s shy without its pass! 😜
               </p>
             )}
-          </>
+          </div>
         )}
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center justify-center p-4">
+      <div className={`main-content flex-1 flex flex-col items-center justify-center p-4 ${isSidebarOpen ? "md:ml-80" : "md:ml-16"}`}>
         <h1 className="text-4xl font-bold text-white mb-6 animate-pulse md:text-5xl">
           Voice LLM App
         </h1>
