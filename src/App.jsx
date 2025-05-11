@@ -9,6 +9,18 @@ import ReactMarkdown from 'react-markdown';
 // Color themes with 10 additional pastel themes + new corporate theme
 const themes = [
   {
+    id: 'midnight',
+    name: '🌑 Midnight',
+    bg: 'from-black to-gray-900',
+    sidebar: 'from-gray-900/60 to-black/60',
+    userMsg: 'from-gray-800 to-gray-900',
+    aiMsg: 'from-gray-700 to-gray-800',
+    micActive: 'from-red-500 to-red-600',
+    micIdle: 'from-gray-600 to-gray-700',
+    input: 'from-gray-900/50 to-black/50',
+    accent: 'gray-400'
+  },
+  {
     id: 'monochrome',
     name: '⚪ Monochrome',
     bg: 'from-gray-200 to-gray-300',
