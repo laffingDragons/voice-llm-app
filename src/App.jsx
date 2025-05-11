@@ -3,9 +3,47 @@ import { OpenAI } from "openai";
 import { Mic, Send, Menu, Trash2, MicOff, Palette } from "lucide-react";
 import CryptoJS from "crypto-js";
 import toast, { Toaster } from "react-hot-toast";
-
-// Color themes with 10 additional pastel themes
+import parse from 'html-react-parser';
+import DOMPurify from 'dompurify';
+import ReactMarkdown from 'react-markdown';
+// Color themes with 10 additional pastel themes + new corporate theme
 const themes = [
+  {
+    id: 'monochrome',
+    name: '⚪ Monochrome',
+    bg: 'from-gray-200 to-gray-300',
+    sidebar: 'from-gray-400/60 to-gray-500/60',
+    userMsg: 'from-gray-600 to-gray-700',
+    aiMsg: 'from-gray-800 to-black',
+    micActive: 'from-red-500 to-red-600',
+    micIdle: 'from-gray-500 to-gray-600',
+    input: 'from-gray-300/50 to-gray-400/50',
+    accent: 'gray-900'
+  },
+  {
+    id: 'material',
+    name: '📐 Material Design',
+    bg: 'from-blue-50 to-gray-100',
+    sidebar: 'from-blue-600/60 to-gray-600/60',
+    userMsg: 'from-blue-500 to-blue-600',
+    aiMsg: 'from-gray-500 to-gray-600',
+    micActive: 'from-red-500 to-red-600',
+    micIdle: 'from-blue-500 to-blue-600',
+    input: 'from-blue-100/50 to-gray-200/50',
+    accent: 'blue-700'
+  },
+  {
+    id: 'corporate',
+    name: '🏢 Corporate Elegance',
+    bg: 'from-gray-800 via-gray-900 to-blue-900',
+    sidebar: 'from-gray-700/60 to-blue-800/60',
+    userMsg: 'from-blue-600 to-blue-700',
+    aiMsg: 'from-gray-600 to-gray-700',
+    micActive: 'from-red-500 to-red-600',
+    micIdle: 'from-blue-500 to-blue-600',
+    input: 'from-gray-800/50 to-blue-800/50',
+    accent: 'yellow-400'
+  },
   {
     id: 'neon',
     name: '🌟 Neon Dreams',
@@ -126,7 +164,6 @@ const themes = [
     input: 'from-gray-900/60 to-purple-900/60',
     accent: 'yellow-400'
   },
-  // 10 Pastel Themes
   {
     id: 'pastel-dream',
     name: '☁️ Pastel Dream',
@@ -246,7 +283,7 @@ const themes = [
     micIdle: 'from-violet-300 to-purple-300',
     input: 'from-purple-300/30 to-pink-300/30',
     accent: 'purple-200'
-  }
+  },
 ];
 
 function App() {
@@ -369,6 +406,14 @@ function App() {
       return;
     }
 
+    if (!isApiKeyValid) {
+      toast.error("🔑 No API key! Open the sidebar and add one to start talking! 🚀", {
+        duration: 4000,
+      });
+      setIsSidebarOpen(true);
+      return;
+    }
+
     if (isListening) {
       recognitionRef.current.stop();
     } else {
@@ -426,7 +471,7 @@ function App() {
   };
 
   // Fetch LLM response with fixed context
-  const fetchLLMResponse = async (input) => {
+   const fetchLLMResponse = async (input) => {
     if (!isApiKeyValid) {
       setError("🤖 AI's throwing a tantrum! Feed it an API key and watch the magic happen! ✨");
       toast.error("🎭 No key, no play! AI demands its GPT-3.5 Turbo goodness! 🍭");
@@ -439,7 +484,12 @@ function App() {
       const openai = new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
       
       // Build messages in the correct order: oldest to newest
-      const messages = [];
+      const messages = [
+        {
+          role: "system",
+          content: "You are a helpful assistant. Format your responses using Markdown syntax (e.g., **bold**, *italic*, - lists) for clarity and readability. Use simple HTML tags (e.g., <b>, <i>, <ul>) only when Markdown is insufficient. Ensure all formatting is professional, and avoid inline styles or scripts."
+        }
+      ];
       
       // Add chat history in chronological order
       chatHistory.forEach((chat) => {
@@ -453,8 +503,7 @@ function App() {
       // If token limit exceeded, keep most recent conversations
       const totalTokens = messages.reduce((sum, msg) => sum + estimateTokens(msg.content), 0);
       if (totalTokens > 3000) {
-        // Keep last 10 exchanges (20 messages) plus the new input
-        const recentMessages = messages.slice(-21);
+        const recentMessages = messages.slice(0, 1).concat(messages.slice(-21));
         messages.splice(0, messages.length, ...recentMessages);
       }
       
@@ -494,12 +543,18 @@ function App() {
     }
   };
 
+
   // Handle text input submission
   const handleTextSubmit = () => {
     if (textInput.trim()) {
       setTranscript(textInput);
       if (isApiKeyValid) {
         fetchLLMResponse(textInput);
+      } else {
+        toast.error("🔑 No API key! Open the sidebar and add one to start chatting! 🚀", {
+          duration: 4000,
+        });
+        setIsSidebarOpen(true);
       }
       setTextInput("");
     }
@@ -519,34 +574,34 @@ function App() {
     toast.success("🧹 Poof! Clean slate activated! Let's start fresh, buddy! 🎉✨");
   };
 
- useEffect(() => {
-  const scrollToBottom = () => {
-        window.scrollTo({
-            top: document.documentElement.scrollHeight,
-            behavior: 'smooth'
-        });
+  useEffect(() => {
+    const scrollToBottom = () => {
+      window.scrollTo({
+        top: document.documentElement.scrollHeight,
+        behavior: 'smooth'
+      });
     };
 
-  // Scroll immediately when loading starts
-  if (isLoading) {
-         setTimeout(scrollToBottom, 800);
-  }
+    // Scroll immediately when loading starts
+    if (isLoading) {
+      setTimeout(scrollToBottom, 800);
+    }
 
-  // MutationObserver to detect DOM changes
-  const observer = new MutationObserver(() => {
-    scrollToBottom();
-  });
-
-  if (chatContainerRef.current) {
-    observer.observe(chatContainerRef.current, {
-      childList: true,
-      subtree: true
+    // MutationObserver to detect DOM changes
+    const observer = new MutationObserver(() => {
+      scrollToBottom();
     });
-  }
 
-  // Cleanup on component unmount
-  return () => observer.disconnect();
-}, [isLoading]);
+    if (chatContainerRef.current) {
+      observer.observe(chatContainerRef.current, {
+        childList: true,
+        subtree: true
+      });
+    }
+
+    // Cleanup on component unmount
+    return () => observer.disconnect();
+  }, [isLoading]);
 
   // Focus text input when shown
   useEffect(() => {
@@ -566,9 +621,9 @@ function App() {
   // Determine if chat should be shown
   const showChat = chatHistory.length > 0 || isLoading;
 
-  return (
-   <div className={`min-h-screen flex flex-col md:flex-row bg-gradient-to-br ${selectedTheme.bg} animate-gradient overflow-hidden`}>
-      {/* Custom CSS for animations */}
+   return (
+    <div className={`min-h-screen flex flex-col md:flex-row bg-gradient-to-br ${selectedTheme.bg} animate-gradient overflow-hidden`}>
+      {/* Custom CSS for animations and Markdown/HTML styling */}
       <style jsx>{`
         @keyframes gradient {
           0% { background-position: 0% 50%; }
@@ -639,6 +694,36 @@ function App() {
         .animate-fade-in {
           animation: fade-in 1s ease-in;
         }
+        /* Markdown and HTML styling */
+        .markdown-content ul {
+          list-style-type: disc;
+          margin-left: 1.5em;
+          margin-bottom: 0.5em;
+        }
+        .markdown-content ol {
+          list-style-type: decimal;
+          margin-left: 1.5em;
+          margin-bottom: 0.5em;
+        }
+        .markdown-content li {
+          margin-bottom: 0.25em;
+        }
+        .markdown-content strong {
+          font-weight: 700;
+        }
+        .markdown-content em {
+          font-style: italic;
+        }
+        .markdown-content p {
+          margin-bottom: 0.5em;
+        }
+        .markdown-content a {
+          color: #60a5fa;
+          text-decoration: underline;
+        }
+        .markdown-content a:hover {
+          color: #3b82f6;
+        }
       `}</style>
 
       {/* Toaster for notifications */}
@@ -702,23 +787,25 @@ function App() {
                 isApiKeyValid !== true ? 'animate-pulse-border' : ''
               }`}
             />
-            {isApiKeyValid === false && <p className={`text-${selectedTheme.accent} mt-2 text-sm animate-pulse`}>{error}</p>}
-            {isApiKeyValid === true && (
-              <p className={`text-green-400 mt-2 text-sm font-semibold animate-bounce`}>🎯 Boom! We're locked and loaded! 🎉</p>
-            )}
-            {!isApiKeyValid && (
-              <p className={`text-yellow-300 mt-3 text-xs animate-fade-in`}>
-                No key? No worries! Just feed me some OpenAI magic and we're good to go! 😎{' '}
-                <a
-                  href="https://platform.openai.com/account/api-keys"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`text-${selectedTheme.accent} underline hover:text-${selectedTheme.accent}/80 transition-colors`}
-                >
-                  Get one here!
-                </a>
-              </p>
-            )}
+            <div aria-live="polite">
+              {isApiKeyValid === false && <p className={`text-${selectedTheme.accent} mt-2 text-sm animate-pulse`}>{error}</p>}
+              {isApiKeyValid === true && (
+                <p className={`text-green-400 mt-2 text-sm font-semibold animate-bounce`}>🎯 Boom! We're locked and loaded! 🎉</p>
+              )}
+              {!isApiKeyValid && (
+                <p className={`text-yellow-300 mt-3 text-xs animate-fade-in`}>
+                  No key? No worries! Just feed me some OpenAI magic and we're good to go! 😎{' '}
+                  <a
+                    href="https://platform.openai.com/account/api-keys"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`text-${selectedTheme.accent} underline hover:text-${selectedTheme.accent}/80 transition-colors`}
+                  >
+                    Get one here!
+                  </a>
+                </p>
+              )}
+            </div>
             
             {/* Theme Selection */}
             <div className="mt-8">
@@ -761,8 +848,7 @@ function App() {
         )}
       </div>
 
-      {/* Main Content */}
-      <div className={`main-content flex-1 flex flex-col transition-all duration-500 relative ${
+       <div className={`main-content flex-1 flex flex-col transition-all duration-500 relative ${
         isSidebarOpen ? "md:ml-80" : "md:ml-0"
       }`}>
         
@@ -792,13 +878,49 @@ function App() {
                 {chatHistory.map((chat, index) => (
                   <div key={index} className="mb-6">
                     <div className="flex justify-end mb-3">
-                      <div className={`p-4 rounded-2xl bg-gradient-to-br ${selectedTheme.userMsg} text-white max-w-[80%] backdrop-blur-sm shadow-lg hover:shadow-blue-500/20 transition-all duration-300 animate-slide-right`}>
-                        {chat.input}
+                      <div className={`markdown-content p-4 rounded-2xl bg-gradient-to-br ${selectedTheme.userMsg} text-white max-w-[80%] backdrop-blur-sm shadow-lg hover:shadow-blue-500/20 transition-all duration-300 animate-slide-right`}>
+                        <ReactMarkdown
+                          remarkPlugins={[]}
+                          components={{
+                            code: ({children, inline}) => (
+                              inline ? <code>{children}</code> : <pre><code>{children}</code></pre>
+                            ),
+                            a: ({children, href}) => (
+                              <a href={href} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">
+                                {children}
+                              </a>
+                            ),
+                            p: ({children}) => <p className="mb-2">{children}</p>,
+                            li: ({children}) => <li className="ml-4">• {children}</li>,
+                            strong: ({children}) => <strong className="font-bold">{children}</strong>,
+                            em: ({children}) => <em className="italic">{children}</em>
+                          }}
+                        >
+                          {chat.input}
+                        </ReactMarkdown>
                       </div>
                     </div>
                     <div className="flex justify-start">
-                      <div className={`p-4 rounded-2xl bg-gradient-to-br ${selectedTheme.aiMsg} text-white max-w-[80%] backdrop-blur-sm shadow-lg hover:shadow-pink-500/20 transition-all duration-300 animate-slide-left`}>
-                        {chat.response}
+                      <div className={`markdown-content p-4 rounded-2xl bg-gradient-to-br ${selectedTheme.aiMsg} text-white max-w-[80%] backdrop-blur-sm shadow-lg hover:shadow-pink-500/20 transition-all duration-300 animate-slide-left`}>
+                        <ReactMarkdown
+                          remarkPlugins={[]}
+                          components={{
+                            code: ({children, inline}) => (
+                              inline ? <code>{children}</code> : <pre><code>{children}</code></pre>
+                            ),
+                            a: ({children, href}) => (
+                              <a href={href} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">
+                                {children}
+                              </a>
+                            ),
+                            p: ({children}) => <p className="mb-2">{children}</p>,
+                            li: ({children}) => <li className="ml-4">• {children}</li>,
+                            strong: ({children}) => <strong className="font-bold">{children}</strong>,
+                            em: ({children}) => <em className="italic">{children}</em>
+                          }}
+                        >
+                          {chat.response}
+                        </ReactMarkdown>
                       </div>
                     </div>
                   </div>
